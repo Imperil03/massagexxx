@@ -1,10 +1,10 @@
-const CACHE_NAME = "massage-xxx-shell-v1";
+const CACHE_NAME = "massage-xxx-shell-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
-  "./manifest.webmanifest",
+  "./styles.css?v=3",
+  "./app.js?v=3",
+  "./manifest.webmanifest?v=3",
   "./logo.svg",
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
@@ -70,12 +70,6 @@ async function handleNavigationRequest(request) {
 }
 
 async function handleStaticRequest(request) {
-  const cachedResponse = await caches.match(request);
-
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
   try {
     const response = await fetch(request);
 
@@ -86,6 +80,7 @@ async function handleStaticRequest(request) {
 
     return response;
   } catch (error) {
-    return Response.error();
+    const cachedResponse = await caches.match(request);
+    return cachedResponse || Response.error();
   }
 }
