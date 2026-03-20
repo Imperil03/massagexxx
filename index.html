@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Массаж xXx">
-  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="manifest" href="./manifest.webmanifest?v=3">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="icon" href="./logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=3">
 </head>
 <body>
   <div class="app-shell">
@@ -39,11 +39,11 @@
 
           <section class="install-panel" aria-labelledby="installTitle">
             <h2 class="install-panel__title" id="installTitle">Установка на экран</h2>
-            <p class="install-panel__copy" id="installCopy">
+            <p class="install-panel__copy" id="installCopy" aria-live="polite">
               После первого открытия страницу можно добавить на главный экран телефона.
             </p>
-            <button class="install-panel__button" id="installButton" type="button" hidden>
-              Добавить на экран
+            <button class="install-panel__button" id="installButton" type="button">
+              Как установить
             </button>
           </section>
         </div>
@@ -98,6 +98,6 @@
       ]
     }
   </script>
-  <script src="./app.js" defer></script>
+  <script src="./app.js?v=3" defer></script>
 </body>
 </html>
