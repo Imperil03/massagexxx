@@ -11,12 +11,13 @@ const defaultConfig = {
   ]
 };
 
-const ASSET_VERSION = "v3";
+const ASSET_VERSION = "v5";
 let deferredInstallPrompt = null;
 
 const configElement = document.getElementById("hubConfig");
 const projectTitleElement = document.getElementById("projectTitle");
 const projectSubtitleElement = document.getElementById("projectSubtitle");
+const installTitleElement = document.getElementById("installTitle");
 const installCopyElement = document.getElementById("installCopy");
 const helperCopyElement = document.getElementById("helperCopy");
 const linkListElement = document.getElementById("linkList");
@@ -118,6 +119,10 @@ function registerInstallEvents() {
 
   installButtonElement.addEventListener("click", async () => {
     if (!deferredInstallPrompt) {
+      if (openPageOutsideTelegram()) {
+        return;
+      }
+
       showManualInstallInstructions();
       return;
     }
@@ -145,6 +150,10 @@ function syncInstallUi() {
       installButtonElement.hidden = true;
     }
 
+     if (installTitleElement) {
+      installTitleElement.textContent = "Установка на экран";
+    }
+
     if (installCopyElement) {
       installCopyElement.textContent = "Хаб уже открыт в standalone-режиме.";
     }
@@ -154,6 +163,10 @@ function syncInstallUi() {
     }
 
     return;
+  }
+
+  if (installTitleElement) {
+    installTitleElement.textContent = getInstallPanelTitle();
   }
 
   if (installCopyElement) {
@@ -166,6 +179,10 @@ function syncInstallUi() {
     installButtonElement.hidden = false;
     installButtonElement.textContent = getInstallButtonLabel();
   }
+
+  if (helperCopyElement) {
+    helperCopyElement.textContent = getHelperMessage();
+  }
 }
 
 function showManualInstallInstructions() {
@@ -176,7 +193,11 @@ function showManualInstallInstructions() {
 
 function getPassiveInstallMessage() {
   if (isTelegramInAppBrowser()) {
-    return "Встроенный браузер Telegram обычно не показывает установку PWA. Нажмите кнопку ниже, чтобы увидеть, как открыть страницу во внешнем браузере.";
+    if (isAndroidDevice()) {
+      return "Встроенный браузер Telegram не устанавливает PWA напрямую. Нажмите кнопку ниже, чтобы открыть страницу во внешнем браузере, а затем установить ее уже там.";
+    }
+
+    return "Встроенный браузер Telegram не устанавливает PWA напрямую. Нажмите кнопку ниже, затем откройте страницу в Safari и добавьте ее на экран Домой.";
   }
 
   if (isIosDevice()) {
@@ -188,8 +209,12 @@ function getPassiveInstallMessage() {
 
 function getManualInstallMessage() {
   if (isTelegramInAppBrowser()) {
+    if (isAndroidDevice()) {
+      return "Если внешний браузер не открылся автоматически, нажмите в Telegram меню ⋮ и выберите «Open in Browser», затем в браузере нажмите «Добавить на экран».";
+    }
+
     if (isIosDevice()) {
-      return "В Telegram на iPhone сначала откройте меню браузера Telegram и выберите «Открыть в Safari», затем в Safari нажмите «Поделиться» -> «На экран Домой».";
+      return "Если Safari не открылся автоматически, нажмите в Telegram меню и выберите «Open in Safari», затем в Safari нажмите «Поделиться» -> «На экран Домой».";
     }
 
     return "В Telegram сначала откройте меню браузера и выберите «Open in Browser» или «Открыть в браузере», затем установите страницу из Chrome через «Добавить на экран».";
@@ -207,11 +232,65 @@ function getInstallButtonLabel() {
     return "Добавить на экран";
   }
 
-  if (isTelegramInAppBrowser()) {
+  if (isTelegramInAppBrowser() && isAndroidDevice()) {
     return "Открыть в браузере";
   }
 
+  if (isTelegramInAppBrowser() && isIosDevice()) {
+    return "Открыть в Safari";
+  }
+
   return "Как установить";
+}
+
+function getInstallPanelTitle() {
+  if (isTelegramInAppBrowser()) {
+    return "Открыть для установки";
+  }
+
+  return "Установка на экран";
+}
+
+function getHelperMessage() {
+  if (isTelegramInAppBrowser()) {
+    return "После открытия во внешнем браузере страницу можно будет добавить на главный экран телефона.";
+  }
+
+  return "После установки хаб будет открываться как отдельное мини-приложение.";
+}
+
+function openPageOutsideTelegram() {
+  if (!isTelegramInAppBrowser()) {
+    return false;
+  }
+
+  if (isAndroidDevice()) {
+    if (installCopyElement) {
+      installCopyElement.textContent = "Пробуем открыть страницу во внешнем браузере. Если переход не сработает, используйте в Telegram меню ⋮ -> «Open in Browser».";
+    }
+
+    window.location.href = buildAndroidIntentUrl(window.location.href);
+
+    window.setTimeout(() => {
+      if (document.visibilityState === "visible" && installCopyElement) {
+        installCopyElement.textContent = getManualInstallMessage();
+      }
+    }, 900);
+
+    return true;
+  }
+
+  if (isIosDevice()) {
+    showManualInstallInstructions();
+    return true;
+  }
+
+  return false;
+}
+
+function buildAndroidIntentUrl(currentUrl) {
+  const cleanUrl = currentUrl.replace(/^https?:\/\//i, "");
+  return `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
 }
 
 function registerServiceWorker() {
@@ -234,6 +313,10 @@ function isStandaloneMode() {
 
 function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+}
+
+function isAndroidDevice() {
+  return /android/i.test(window.navigator.userAgent);
 }
 
 function isTelegramInAppBrowser() {
