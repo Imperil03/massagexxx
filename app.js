@@ -11,7 +11,7 @@ const defaultConfig = {
   ]
 };
 
-const ASSET_VERSION = "v5";
+const ASSET_VERSION = "v6";
 let deferredInstallPrompt = null;
 
 const configElement = document.getElementById("hubConfig");
@@ -22,6 +22,7 @@ const installCopyElement = document.getElementById("installCopy");
 const helperCopyElement = document.getElementById("helperCopy");
 const linkListElement = document.getElementById("linkList");
 const installButtonElement = document.getElementById("installButton");
+const browserButtonElement = document.getElementById("browserButton");
 
 init();
 
@@ -117,31 +118,11 @@ function registerInstallEvents() {
     return;
   }
 
-  installButtonElement.addEventListener("click", async () => {
-    if (!deferredInstallPrompt) {
-      if (openPageOutsideTelegram()) {
-        return;
-      }
+  installButtonElement.addEventListener("click", onInstallButtonClick);
 
-      showManualInstallInstructions();
-      return;
-    }
-
-    deferredInstallPrompt.prompt();
-    const choice = await deferredInstallPrompt.userChoice;
-
-    if (choice.outcome === "accepted") {
-      if (installCopyElement) {
-        installCopyElement.textContent = "Установка подтверждена. После завершения хаб появится на главном экране.";
-      }
-
-      installButtonElement.textContent = "Ожидание установки";
-    } else {
-      syncInstallUi();
-    }
-
-    deferredInstallPrompt = null;
-  });
+  if (browserButtonElement) {
+    browserButtonElement.addEventListener("click", onBrowserButtonClick);
+  }
 }
 
 function syncInstallUi() {
@@ -150,7 +131,11 @@ function syncInstallUi() {
       installButtonElement.hidden = true;
     }
 
-     if (installTitleElement) {
+    if (browserButtonElement) {
+      browserButtonElement.hidden = true;
+    }
+
+    if (installTitleElement) {
       installTitleElement.textContent = "Установка на экран";
     }
 
@@ -180,6 +165,11 @@ function syncInstallUi() {
     installButtonElement.textContent = getInstallButtonLabel();
   }
 
+  if (browserButtonElement) {
+    browserButtonElement.hidden = false;
+    browserButtonElement.textContent = getBrowserButtonLabel();
+  }
+
   if (helperCopyElement) {
     helperCopyElement.textContent = getHelperMessage();
   }
@@ -192,39 +182,19 @@ function showManualInstallInstructions() {
 }
 
 function getPassiveInstallMessage() {
-  if (isTelegramInAppBrowser()) {
-    if (isAndroidDevice()) {
-      return "Встроенный браузер Telegram не устанавливает PWA напрямую. Нажмите кнопку ниже, чтобы открыть страницу во внешнем браузере, а затем установить ее уже там.";
-    }
-
-    return "Встроенный браузер Telegram не устанавливает PWA напрямую. Нажмите кнопку ниже, затем откройте страницу в Safari и добавьте ее на экран Домой.";
-  }
-
   if (isIosDevice()) {
-    return "На iPhone кнопка установки не системная: нажмите ниже и затем откройте «Поделиться».";
+    return "Если страница открыта внутри Telegram или другого приложения, сначала нажмите «Открыть в браузере». В Safari затем используйте «Поделиться» -> «На экран Домой».";
   }
 
-  return "Если браузер разрешит установку, кнопка сработает сразу. Если нет, нажмите ниже и откройте меню браузера.";
+  return "Если страница открыта внутри Telegram или другого приложения, сначала нажмите «Открыть в браузере». Если вы уже в браузере, откройте меню и добавьте страницу на главный экран.";
 }
 
 function getManualInstallMessage() {
-  if (isTelegramInAppBrowser()) {
-    if (isAndroidDevice()) {
-      return "Если внешний браузер не открылся автоматически, нажмите в Telegram меню ⋮ и выберите «Open in Browser», затем в браузере нажмите «Добавить на экран».";
-    }
-
-    if (isIosDevice()) {
-      return "Если Safari не открылся автоматически, нажмите в Telegram меню и выберите «Open in Safari», затем в Safari нажмите «Поделиться» -> «На экран Домой».";
-    }
-
-    return "В Telegram сначала откройте меню браузера и выберите «Open in Browser» или «Открыть в браузере», затем установите страницу из Chrome через «Добавить на экран».";
-  }
-
   if (isIosDevice()) {
-    return "На iPhone откройте меню «Поделиться» и выберите «На экран Домой».";
+    return "Если Safari не открылся автоматически, используйте меню текущего приложения и выберите «Open in Safari», затем в Safari нажмите «Поделиться» -> «На экран Домой».";
   }
 
-  return "Если кнопка не появилась, откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».";
+  return "Если внешний браузер не открылся автоматически, используйте меню текущего приложения и выберите «Open in Browser», затем в браузере нажмите «Установить приложение» или «Добавить на главный экран».";
 }
 
 function getInstallButtonLabel() {
@@ -232,65 +202,70 @@ function getInstallButtonLabel() {
     return "Добавить на экран";
   }
 
-  if (isTelegramInAppBrowser() && isAndroidDevice()) {
-    return "Открыть в браузере";
-  }
-
-  if (isTelegramInAppBrowser() && isIosDevice()) {
-    return "Открыть в Safari";
-  }
-
   return "Как установить";
 }
 
 function getInstallPanelTitle() {
-  if (isTelegramInAppBrowser()) {
-    return "Открыть для установки";
-  }
-
   return "Установка на экран";
 }
 
 function getHelperMessage() {
-  if (isTelegramInAppBrowser()) {
-    return "После открытия во внешнем браузере страницу можно будет добавить на главный экран телефона.";
-  }
-
-  return "После установки хаб будет открываться как отдельное мини-приложение.";
+  return "Если ссылка открыта внутри Telegram, сначала перейдите во внешний браузер, а уже там добавьте страницу на главный экран.";
 }
 
-function openPageOutsideTelegram() {
-  if (!isTelegramInAppBrowser()) {
-    return false;
+async function onInstallButtonClick() {
+  if (!deferredInstallPrompt) {
+    showManualInstallInstructions();
+    return;
   }
 
-  if (isAndroidDevice()) {
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+
+  if (choice.outcome === "accepted") {
     if (installCopyElement) {
-      installCopyElement.textContent = "Пробуем открыть страницу во внешнем браузере. Если переход не сработает, используйте в Telegram меню ⋮ -> «Open in Browser».";
+      installCopyElement.textContent = "Установка подтверждена. После завершения хаб появится на главном экране.";
     }
 
-    window.location.href = buildAndroidIntentUrl(window.location.href);
+    installButtonElement.textContent = "Ожидание установки";
+  } else {
+    syncInstallUi();
+  }
 
-    window.setTimeout(() => {
-      if (document.visibilityState === "visible" && installCopyElement) {
-        installCopyElement.textContent = getManualInstallMessage();
-      }
-    }, 900);
+  deferredInstallPrompt = null;
+}
 
-    return true;
+function onBrowserButtonClick() {
+  if (installCopyElement) {
+    installCopyElement.textContent = "Пробуем открыть страницу во внешнем браузере. Если переход не сработает, используйте меню текущего приложения -> «Open in Browser».";
   }
 
   if (isIosDevice()) {
-    showManualInstallInstructions();
-    return true;
+    window.open(window.location.href, "_blank", "noopener");
+    window.setTimeout(showManualInstallInstructions, 700);
+    return;
   }
 
-  return false;
+  window.location.href = buildAndroidIntentUrl(window.location.href);
+
+  window.setTimeout(() => {
+    if (document.visibilityState === "visible" && installCopyElement) {
+      installCopyElement.textContent = getManualInstallMessage();
+    }
+  }, 900);
 }
 
 function buildAndroidIntentUrl(currentUrl) {
   const cleanUrl = currentUrl.replace(/^https?:\/\//i, "");
   return `intent://${cleanUrl}#Intent;scheme=https;action=android.intent.action.VIEW;end`;
+}
+
+function getBrowserButtonLabel() {
+  if (isIosDevice()) {
+    return "Открыть в Safari";
+  }
+
+  return "Открыть в браузере";
 }
 
 function registerServiceWorker() {
@@ -313,14 +288,6 @@ function isStandaloneMode() {
 
 function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-}
-
-function isAndroidDevice() {
-  return /android/i.test(window.navigator.userAgent);
-}
-
-function isTelegramInAppBrowser() {
-  return /telegram|tgwebview/i.test(window.navigator.userAgent);
 }
 
 function isExternalLink(href) {
