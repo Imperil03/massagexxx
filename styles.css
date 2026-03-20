@@ -167,7 +167,20 @@ a {
   cursor: pointer;
 }
 
-.install-panel__button[hidden] {
+.install-panel__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.install-panel__button--ghost {
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--accent);
+  box-shadow: none;
+}
+
+.install-panel__button[hidden],
+.install-panel__actions[hidden] {
   display: none;
 }
 
@@ -255,6 +268,12 @@ a {
     transform: translateY(-1px);
     background: var(--accent-strong);
     box-shadow: 0 16px 28px rgba(245, 50, 119, 0.28);
+  }
+
+  .install-panel__button--ghost:hover {
+    background: #fff4f8;
+    border-color: var(--accent);
+    box-shadow: 0 10px 20px rgba(82, 34, 55, 0.08);
   }
 }
 
