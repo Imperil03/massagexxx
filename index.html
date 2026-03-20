@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Массаж xXx</title>
+  <meta name="description" content="Минималистичный мобильный PWA-хаб с быстрым доступом к основным ссылкам проекта.">
+  <meta name="theme-color" content="#f53277">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Массаж xXx">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" href="./logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="hub" aria-labelledby="projectTitle">
+      <section class="profile-card" aria-label="Карточка проекта">
+        <div class="profile-card__band" aria-hidden="true"></div>
+        <div class="profile-card__content">
+          <div class="profile-card__logo-frame">
+            <img
+              class="profile-card__logo"
+              src="./logo.svg"
+              width="88"
+              height="88"
+              alt="Логотип проекта Массаж xXx"
+            >
+          </div>
+
+          <p class="profile-card__eyebrow">Быстрый доступ</p>
+          <h1 class="profile-card__title" id="projectTitle">Массаж xXx</h1>
+          <p class="profile-card__subtitle" id="projectSubtitle">
+            Мини-хаб для перехода к основным ссылкам проекта.
+          </p>
+
+          <section class="install-panel" aria-labelledby="installTitle">
+            <h2 class="install-panel__title" id="installTitle">Установка на экран</h2>
+            <p class="install-panel__copy" id="installCopy">
+              После первого открытия страницу можно добавить на главный экран телефона.
+            </p>
+            <button class="install-panel__button" id="installButton" type="button" hidden>
+              Добавить на экран
+            </button>
+          </section>
+        </div>
+      </section>
+
+      <nav class="links-card" aria-label="Основные ссылки">
+        <ul class="link-list" id="linkList"></ul>
+      </nav>
+
+      <p class="helper-copy" id="helperCopy">
+        После установки хаб будет открываться как отдельное мини-приложение.
+      </p>
+
+      <noscript>
+        <section class="noscript-panel" aria-label="Ссылки без JavaScript">
+          <a class="hub-link" href="https://example.com">На сайт <span aria-hidden="true">&gt;</span></a>
+          <a class="hub-link" href="https://t.me/example_channel">ТГ-канал <span aria-hidden="true">&gt;</span></a>
+          <a class="hub-link" href="https://t.me/example_support">ТП в Телеграм <span aria-hidden="true">&gt;</span></a>
+          <a class="hub-link" href="mailto:support@example.com">e-mail <span aria-hidden="true">&gt;</span></a>
+          <a class="hub-link" href="https://example.com/support">Чат поддержки <span aria-hidden="true">&gt;</span></a>
+        </section>
+      </noscript>
+    </main>
+  </div>
+
+  <script type="application/json" id="hubConfig">
+    {
+      "projectName": "Массаж xXx",
+      "projectSubtitle": "Мини-хаб для перехода к основным ссылкам проекта.",
+      "installHint": "После первого открытия страницу можно добавить на главный экран телефона.",
+      "links": [
+        {
+          "label": "На сайт",
+          "href": "https://example.com"
+        },
+        {
+          "label": "ТГ-канал",
+          "href": "https://t.me/example_channel"
+        },
+        {
+          "label": "ТП в Телеграм",
+          "href": "https://t.me/example_support"
+        },
+        {
+          "label": "e-mail",
+          "href": "mailto:support@example.com"
+        },
+        {
+          "label": "Чат поддержки",
+          "href": "https://example.com/support"
+        }
+      ]
+    }
+  </script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
