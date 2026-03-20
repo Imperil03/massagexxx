@@ -11,6 +11,7 @@ const defaultConfig = {
   ]
 };
 
+const ASSET_VERSION = "v3";
 let deferredInstallPrompt = null;
 
 const configElement = document.getElementById("hubConfig");
@@ -117,7 +118,7 @@ function registerInstallEvents() {
 
   installButtonElement.addEventListener("click", async () => {
     if (!deferredInstallPrompt) {
-      syncInstallUi();
+      showManualInstallInstructions();
       return;
     }
 
@@ -128,6 +129,8 @@ function registerInstallEvents() {
       if (installCopyElement) {
         installCopyElement.textContent = "Установка подтверждена. После завершения хаб появится на главном экране.";
       }
+
+      installButtonElement.textContent = "Ожидание установки";
     } else {
       syncInstallUi();
     }
@@ -156,20 +159,59 @@ function syncInstallUi() {
   if (installCopyElement) {
     installCopyElement.textContent = deferredInstallPrompt
       ? "Установка доступна. Нажмите кнопку ниже, чтобы добавить хаб на главный экран."
-      : getManualInstallMessage();
+      : getPassiveInstallMessage();
   }
 
   if (installButtonElement) {
-    installButtonElement.hidden = !deferredInstallPrompt;
+    installButtonElement.hidden = false;
+    installButtonElement.textContent = getInstallButtonLabel();
   }
 }
 
+function showManualInstallInstructions() {
+  if (installCopyElement) {
+    installCopyElement.textContent = getManualInstallMessage();
+  }
+}
+
+function getPassiveInstallMessage() {
+  if (isTelegramInAppBrowser()) {
+    return "Встроенный браузер Telegram обычно не показывает установку PWA. Нажмите кнопку ниже, чтобы увидеть, как открыть страницу во внешнем браузере.";
+  }
+
+  if (isIosDevice()) {
+    return "На iPhone кнопка установки не системная: нажмите ниже и затем откройте «Поделиться».";
+  }
+
+  return "Если браузер разрешит установку, кнопка сработает сразу. Если нет, нажмите ниже и откройте меню браузера.";
+}
+
 function getManualInstallMessage() {
+  if (isTelegramInAppBrowser()) {
+    if (isIosDevice()) {
+      return "В Telegram на iPhone сначала откройте меню браузера Telegram и выберите «Открыть в Safari», затем в Safari нажмите «Поделиться» -> «На экран Домой».";
+    }
+
+    return "В Telegram сначала откройте меню браузера и выберите «Open in Browser» или «Открыть в браузере», затем установите страницу из Chrome через «Добавить на экран».";
+  }
+
   if (isIosDevice()) {
     return "На iPhone откройте меню «Поделиться» и выберите «На экран Домой».";
   }
 
   return "Если кнопка не появилась, откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».";
+}
+
+function getInstallButtonLabel() {
+  if (deferredInstallPrompt) {
+    return "Добавить на экран";
+  }
+
+  if (isTelegramInAppBrowser()) {
+    return "Открыть в браузере";
+  }
+
+  return "Как установить";
 }
 
 function registerServiceWorker() {
@@ -179,7 +221,7 @@ function registerServiceWorker() {
 
   window.addEventListener("load", async () => {
     try {
-      await navigator.serviceWorker.register("./sw.js");
+      await navigator.serviceWorker.register(`./sw.js?${ASSET_VERSION}`);
     } catch (error) {
       console.warn("Не удалось зарегистрировать service worker.", error);
     }
@@ -192,6 +234,10 @@ function isStandaloneMode() {
 
 function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+}
+
+function isTelegramInAppBrowser() {
+  return /telegram|tgwebview/i.test(window.navigator.userAgent);
 }
 
 function isExternalLink(href) {
